@@ -1,0 +1,15 @@
+{
+    "extends": "../tsconfig.common.json",
+    "compilerOptions": {
+        "outFile": "examples.js"
+    },
+    "include": [
+        "**/*.ts",
+    ],
+    "exclude": [
+        "examples.d.ts",
+    ],
+    "references": [
+        { "path": "../src", "prepend": true }
+    ]
+}

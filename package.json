@@ -1,0 +1,11 @@
+{
+    "name": "@maulingmonkey/ui-map2d",
+    "version": "0.0.0",
+    "private": true,
+    "main": "modular.js",
+    "devDependencies": {
+        "@maulingmonkey/modularize-namespace": "0.0.1",
+        "typedoc": "^0.14.2",
+        "typedoc-plugin-sourcefile-url": "^1.0.4"
+    }
+}

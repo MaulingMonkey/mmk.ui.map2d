@@ -1,0 +1,50 @@
+{
+    "version": "2.0.0",
+    "problemMatcher": ["$tsc"],
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": true
+    },
+    "windows": {
+        "options": {
+            "env": {
+                "PATH": "${workspaceFolder}\\node_modules\\.bin;${env:PATH}",
+            }
+        }
+    },
+    "tasks": [
+        // Auto watch
+        {
+            "group": "build",
+            "label": "Auto Watch:  Build global typescript",
+            "type": "shell",
+            "command": "tsc -b -w src examples",
+            "problemMatcher": ["$tsc-watch"],
+            "isBackground": true,
+            "runOptions": { "runOn": "folderOpen" }
+        },
+        {
+            "group": "build",
+            "label": "Auto Watch:  Build modular library",
+            "type": "shell",
+            "command": "modularize-namespace --watch global.js --output modular.js --namespace mmk.example",
+            "problemMatcher": [],
+            "isBackground": true,
+            "runOptions": { "runOn": "folderOpen" }
+        },
+
+        // Coarse builds
+        { "group": "build", "label": "Build typescript", "type": "shell", "command": "${workspaceFolder}/tasks/build_typescript.cmd", "problemMatcher": ["$tsc"] },
+        { "group": "build", "label": "Build docs",       "type": "shell", "command": "typedoc --mode file --out docs --exclude node_modules/@types/karma/* --sourcefile-url-prefix ../../src/ src", "problemMatcher": [] },
+
+        // Utility tasks
+        { "group": "none", "label": "Open examples",      "type": "shell", "command": "${workspaceFolder}/examples/index.html", "problemMatcher": [] },
+        { "group": "none", "label": "Open local docs",    "type": "shell", "command": "${workspaceFolder}/docs/index.html", "problemMatcher": [], "dependsOn": ["Build docs"] },
+        { "group": "none", "label": "Open GitHub",        "type": "shell", "command": "start \"\" \"https://github.com/MaulingMonkey/mmk.ui.map2d\"",        "problemMatcher": [] },
+        { "group": "none", "label": "Open GitHub issues", "type": "shell", "command": "start \"\" \"https://github.com/MaulingMonkey/mmk.ui.map2d/issues\"", "problemMatcher": [] },
+    ]
+}

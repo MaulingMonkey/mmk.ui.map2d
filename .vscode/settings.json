@@ -1,0 +1,10 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/*.tsbuildinfo": true,
+        "{examples,tests_global,tests_modular}/*.{d.ts,js,js.map}": true,
+        "{global,modular}.{d.ts,d.ts.map,js,js.map}": true,
+        "package-lock.json": true,
+    },
+    "editor.rulers": [120]
+}
