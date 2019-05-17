@@ -1,10 +1,31 @@
 {
     "name": "@maulingmonkey/ui-map2d",
     "version": "0.0.0",
-    "private": true,
-    "main": "modular.js",
+    "description": "Typescript 2D Map API for game UI",
+    "license": "Apache-2.0",
+    "keywords": [
+        "browser",
+        "map",
+        "ui",
+        "canvas"
+    ],
+    "author": "MaulingMonkey <npm@maulingmonkey.com> (https://maulingmonkey.com/)",
+    "bugs": "https://github.com/MaulingMonkey/mmk.ui.map2d/issues",
+    "homepage": "https://github.com/MaulingMonkey/mmk.ui.map2d#readme",
+    "repository": "github:MaulingMonkey/mmk.ui.map2d",
+    "browser": "global.js",
+    "types": "global.d.ts",
+    "main": "global.js",
+    "files": [
+        "global.d.ts",
+        "global.js",
+        "LICENSE.txt",
+        "modular.d.ts",
+        "modular.js",
+        "Readme.md"
+    ],
     "devDependencies": {
-        "@maulingmonkey/modularize-namespace": "0.0.1",
+        "@maulingmonkey/modularize-namespace": "0.0.3",
         "typedoc": "^0.14.2",
         "typedoc-plugin-sourcefile-url": "^1.0.4"
     }
