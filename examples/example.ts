@@ -113,8 +113,8 @@ namespace examples {
                 { type: "paths", strokeStyle: "#48F", paths: () => universe.fleets.filter(f => f.team === 0).map(f => [f, ...f.queuedWaypoints || []]) },
                 { type: "velocities", strokeStyle: "#F00", velocities: () => universe.fleets.filter(f => f.team !== 0).map(f => fleetPosVel(f)) },
                 // POIs
-                { type: "circles",                      fillStyle: "#FFF", circles: () => universe.stars.map(s => ({ ...s, r: starRadius })) },
-                { type: "circles", borderStyle: "#FFF",                    circles: () => universe.stars.map(s => ({ ...s, r: s.hasOrbiters ? (starRadius + 2) : 0 })) },
+                { type: "circles",                      fillStyle: "#FFF", scaleWithZoom: false, circles: () => universe.stars.map(s => ({ ...s, r: starRadius })) },
+                { type: "circles", borderStyle: "#FFF",                    scaleWithZoom: false, circles: () => universe.stars.map(s => ({ ...s, r: s.hasOrbiters ? (starRadius + 2) : 0 })) },
                 { type: "circles", borderStyle: "#F0F", fillStyle: "#202", circles: () => universe.wormholePairs.map(wp => ({ ...wp.a, r: 4 })) },
                 { type: "circles", borderStyle: "#F0F", fillStyle: "#202", circles: () => universe.wormholePairs.map(wp => ({ ...wp.b, r: 4 })) },
                 { type: "icons", icons: () => universe.fleets.map(f => ({ ...f, icon: ["friendly-fleet", "enemy-fleet"][f.team] }))},

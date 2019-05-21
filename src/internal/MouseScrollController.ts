@@ -30,7 +30,7 @@ namespace mmk.ui.map2d.internal {
             (1 << LMB) | (1 << RMB), // LMB & RMB
         ];
 
-        public constructor (target: HTMLElement, moveCallback : (delta: {dx: number; dy: number}) => void) {
+        public constructor (target: HTMLElement, moveCallback : (delta: {dx: number; dy: number; dzoom: number; }) => void) {
             target.addEventListener("mousedown", ev=>{
                 if (this.buttons === 0) this.scrolled = 0;
                 const wasAlreadyDragging = this.legalMasks.indexOf(this.buttons) !== -1;
@@ -41,6 +41,12 @@ namespace mmk.ui.map2d.internal {
                     this.prevX = ev.x;
                     this.prevY = ev.y;
                 }
+                this.traceEv(ev);
+            });
+
+            target.addEventListener("wheel", ev=>{
+                ev.preventDefault();
+                moveCallback({dx: 0, dy: 0, dzoom: Math.sign(ev.deltaY)});
                 this.traceEv(ev);
             });
 
@@ -76,14 +82,14 @@ namespace mmk.ui.map2d.internal {
                     this.scrolled += Math.abs(dx);
                     this.scrolled += Math.abs(dy);
                     ev.preventDefault();
-                    moveCallback({dx, dy});
+                    moveCallback({dx, dy, dzoom: 0});
                 }
                 this.traceEv(ev);
             }, true);
         }
 
         private traceEv (ev: Event) {
-            //console.log(ev.type, ev.defaultPrevented, this.buttons.toString(2));
+            //console.log(ev.type, ev.defaultPrevented, this.buttons.toString(2), ev);
         }
     }
 }

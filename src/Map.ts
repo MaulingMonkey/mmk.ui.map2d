@@ -24,6 +24,7 @@ namespace mmk.ui.map2d {
         type: "circles";
         borderStyle?: string;
         fillStyle?: string;
+        scaleWithZoom?: boolean; // Default: true
         circles: LazyArray<{ x: number; y: number; r: number; }>;
     }
     export interface PathsLayer {
@@ -75,11 +76,13 @@ namespace mmk.ui.map2d {
         private scrollController : internal.MouseScrollController;
         private scrollSpeed : number = -1;
         private focus : XY = { x: 0, y: 0 };
+        private zoom : number = 1;
 
         public constructor (private canvas: HTMLCanvasElement, private config: MapConfig) {
             this.scrollController = new internal.MouseScrollController(canvas, drag => {
-                this.focus.x += this.scrollSpeed * drag.dx;
-                this.focus.y += this.scrollSpeed * drag.dy;
+                this.focus.x += this.scrollSpeed / this.zoom * drag.dx;
+                this.focus.y += this.scrollSpeed / this.zoom * drag.dy;
+                this.zoom    *= Math.pow(2, drag.dzoom);
             });
 
             // XXX: Consider hoisting this into a utility function?
@@ -123,6 +126,7 @@ namespace mmk.ui.map2d {
             const ctx = canvas.getContext("2d");
             if (!ctx) return;
             ctx.clearRect(0, 0, w, h);
+            ctx.translate(Math.floor(w/2) - this.focus.x * this.zoom, Math.floor(h/2) - this.focus.y * this.zoom); // Make `focus * zoom` the center of the canvas.
 
             for (const layer of config.layers) {
                 switch (layer.type) {
@@ -144,27 +148,23 @@ namespace mmk.ui.map2d {
             this.focus.y += dy;
         }
 
-        private getFocusDXDY (): { dx: number; dy: number; } {
-            const dx = this.canvas.width /2 - this.focus.x;
-            const dy = this.canvas.height/2 - this.focus.y;
-            return {dx, dy};
-        }
-
         private drawCircles (ctx: CanvasRenderingContext2D, layer: CirclesLayer) {
             const lineW = 1;
             const lineW_2 = lineW/2;
             const pi2 = 2*Math.PI;
 
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            const {dx, dy} = this.getFocusDXDY();
-            const territory = evalLazy(layer.circles).map(c => ({...c, x: c.x + dx, y: c.y + dy})).filter(c => {
+            const {zoom} = this;
+            const {width, height} = this.canvas;
+            const areaW_2 = Math.ceil(width/zoom/2);
+            const areaH_2 = Math.ceil(height/zoom/2);
+            const scaleR = layer.scaleWithZoom !== false ? zoom : 1;
+            const territory = evalLazy(layer.circles).map(c => ({...c, x: c.x * zoom, y: c.y * zoom, r: c.r * scaleR})).filter(c => {
                 const {x,y,r} = c;
                 if (!r) return false;
-                if (x+r < 0) return false;
-                if (x-r > w) return false;
-                if (y+r < 0) return false;
-                if (y-r > h) return false;
+                //if (x+r < -areaW_2) return false;
+                //if (x-r > +areaW_2) return false;
+                //if (y+r < -areaH_2) return false;
+                //if (y-r > +areaH_2) return false;
                 return true;
             });
             if (layer.fillStyle) {
@@ -179,7 +179,7 @@ namespace mmk.ui.map2d {
                     }
                 }
                 ctx.fillStyle = layer.fillStyle;
-                for (const t of territory) {
+                for (const t of territory) if (t.r > lineW_2 + 0.1) {
                     ctx.beginPath();
                     ctx.ellipse(t.x, t.y, t.r-lineW_2, t.r-lineW_2, 0, 0, pi2);
                     ctx.fill();
@@ -197,21 +197,19 @@ namespace mmk.ui.map2d {
         }
 
         private drawPaths (ctx: CanvasRenderingContext2D, layer: PathsLayer) {
-            const {dx, dy} = this.getFocusDXDY();
+            const {zoom} = this;
             const paths = evalLazy(layer.paths);
             ctx.strokeStyle = layer.strokeStyle;
             ctx.lineWidth = layer.lineWidth || 1;
             for (const path of paths) {
                 ctx.beginPath();
-                for (const point of path) {
-                    ctx.lineTo(point.x + dx, point.y + dy);
-                }
+                for (const point of path) ctx.lineTo(point.x * zoom, point.y * zoom);
                 ctx.stroke();
             }
         }
 
         private drawVelocities (ctx: CanvasRenderingContext2D, layer: VelocitiesLayer) {
-            const focus = this.getFocusDXDY();
+            const {zoom} = this;
             const velocities = evalLazy(layer.velocities);
             const featureSize   = layer.featureSize || 4;
             const intervals     = layer.intervals || 5;
@@ -220,8 +218,8 @@ namespace mmk.ui.map2d {
             ctx.lineWidth = layer.lineWidth || 1;
             for (const vel of velocities) {
                 const {x, y, dx, dy} = vel;
-                if (dx === 0 && dy === 0) continue;
                 const m = Math.sqrt(dx*dx + dy*dy);
+                if (m < 0.01) continue;
                 const udx = dx/m;
                 const udy = dy/m;
                 const fback  = { x: -udx, y: -udy };
@@ -230,16 +228,16 @@ namespace mmk.ui.map2d {
 
                 ctx.beginPath();
                 // Draw main velocity vector
-                ctx.moveTo(focus.dx + x - dx*intervals*intervalScale, focus.dy + y - dy*intervals*intervalScale);
-                ctx.lineTo(focus.dx + x + dx*intervals*intervalScale, focus.dy + y + dy*intervals*intervalScale);
+                ctx.moveTo(zoom * (x - dx*intervals*intervalScale), zoom * (y - dy*intervals*intervalScale));
+                ctx.lineTo(zoom * (x + dx*intervals*intervalScale), zoom * (y + dy*intervals*intervalScale));
 
                 for (let i = -intervals; i <= +intervals; ++i) {
-                    const baseX = focus.dx + x + i*dx*intervalScale;
-                    const baseY = focus.dy + y + i*dy*intervalScale;
+                    const baseX = zoom * (x + i*dx*intervalScale);
+                    const baseY = zoom * (y + i*dy*intervalScale);
 
                     if (i === +intervals) {
                         // Arrowhead
-                        ctx.moveTo(baseX + featureSize * (fleft.x + fback.x),  baseY + featureSize * (fleft.y + fback.y));
+                        ctx.moveTo(baseX + featureSize * (fleft.x + fback.x), baseY + featureSize * (fleft.y + fback.y));
                         ctx.lineTo(baseX, baseY);
                         ctx.lineTo(baseX + featureSize * (fright.x + fback.x), baseY + featureSize * (fright.y + fback.y));
                     }
@@ -258,22 +256,22 @@ namespace mmk.ui.map2d {
         }
 
         private drawIcons (ctx: CanvasRenderingContext2D, layer: IconsLayer) {
-            const {dx, dy} = this.getFocusDXDY();
+            const {zoom} = this;
             const icons = evalLazy(layer.icons);
             for (const poi of icons) {
                 const {img, width, height, snap} = this.icons[poi.icon];
                 if (!img) continue;
                 if (!img.complete) continue;
-                let x = poi.x - width/2 + dx;
-                let y = poi.y - height/2 + dy;
+                let x = poi.x * zoom - width/2;
+                let y = poi.y * zoom - height/2;
                 if (snap) {
                     x = Math.round(x);
                     y = Math.round(y);
                 }
-                if (x > this.canvas.width) continue;
-                if (y > this.canvas.height) continue;
-                if (x + width  < 0) continue;
-                if (y + height < 0) continue;
+                //if (x > this.canvas.width) continue;
+                //if (y > this.canvas.height) continue;
+                //if (x + width  < 0) continue;
+                //if (y + height < 0) continue;
                 ctx.drawImage(img, x, y, width, height);
             }
         }
