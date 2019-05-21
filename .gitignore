@@ -16,7 +16,7 @@
 
 # gh-pages only
 /docs/
-/examples/*.js
-/examples/*.js.map
-/examples/*.d.ts
-/examples/*.d.ts.map
+#/examples/*.js
+#/examples/*.js.map
+#/examples/*.d.ts
+#/examples/*.d.ts.map
